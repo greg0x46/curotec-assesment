@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskRequest;
+use App\Models\Category;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,13 +17,19 @@ class TaskController extends Controller
             abort(403, 'You are not authorized to view the task list.');
         }
 
+        $filters = $request->only(['status', 'priority', 'category', 'q']);
+
         $tasks = Task::query()
             ->with(['owner:id,name', 'assignee:id,name', 'categories:id,name'])
             ->select(['id', 'owner_id', 'assigned_to_id', 'title', 'priority', 'status', 'due_date'])
-            ->paginate(10);
+            ->applyFilters($filters)
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Tasks', [
-            'tasks' => $tasks,
+            'tasks'      => $tasks,
+            'categories' => Category::select('id','name')->get(),
+            'filters'    => $filters ?: new \stdClass(),
         ]);
     }
 

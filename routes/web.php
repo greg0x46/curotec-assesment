@@ -6,6 +6,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TaskController;
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+        redirect()->route('tasks.index');
+    });
+
     Route::resource('categories', CategoryController::class)
         ->only(['index', 'store', 'update', 'destroy']);
     Route::resource('tasks', TaskController::class)
