@@ -4,6 +4,8 @@ use App\Models\User;
 use App\Models\Task;
 use App\Models\Category;
 use Inertia\Testing\AssertableInertia as Assert;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\TaskDueReminder;
 use function Pest\Laravel\{
     get, post, put, delete, from,
     assertDatabaseHas, assertDatabaseMissing, assertSoftDeleted
@@ -343,4 +345,29 @@ it('redirects guests to login on delete', function () {
         'id'         => $task->id,
         'deleted_at' => null,
     ]);
+});
+
+it('queues a due date reminder for the assignee', function () {
+    Notification::fake();
+
+    [$owner, $assignee] = User::factory()->count(2)->create();
+
+    $task = Task::factory()
+        ->for($owner, 'owner')
+        ->create([
+            'assigned_to_id' => $assignee->id,
+            'due_date' => now()->addDays(3),
+            'status' => 'pending',
+            'priority' => 'normal',
+        ]);
+
+    $expectedDelay = $task->due_date->subDay();
+
+    Notification::assertSentTo(
+        $assignee,
+        TaskDueReminder::class,
+        function ($notification) use ($task, $expectedDelay) {
+            return $notification->task->is($task) && $notification->delay->equalTo($expectedDelay);
+        }
+    );
 });

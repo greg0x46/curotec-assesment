@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\TaskDueReminder;
 
 #[ObservedBy([TaskObserver::class])]
 class Task extends Model
@@ -32,6 +33,34 @@ class Task extends Model
         'priority' => TaskPriority::class,
         'due_date' => 'immutable_datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(fn (Task $task) => $task->queueDueReminder());
+
+        static::updated(function (Task $task) {
+            if ($task->wasChanged(['due_date', 'assigned_to_id'])) {
+                $task->queueDueReminder();
+            }
+        });
+    }
+
+    public function queueDueReminder(): void
+    {
+        $notifiable = $this->assignee ?? $this->owner;
+
+        if (!$notifiable || !$this->due_date) {
+            return;
+        }
+
+        $delay = $this->due_date->subDay();
+
+        if ($delay->isPast()) {
+            return;
+        }
+
+        $notifiable->notify((new TaskDueReminder($this))->delay($delay));
+    }
 
     public function owner(): BelongsTo
     {
