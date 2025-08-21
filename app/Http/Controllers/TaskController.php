@@ -28,9 +28,17 @@ class TaskController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        // This caching strategy is very basic and should ideally have a better
+        // invalidation/refresh mechanism. For now, it only demonstrates that
+        // these frequently used values should be cached instead of being queried
+        // directly every time.
+        $categories = cache()->remember('categories-filter-for-tasks', now()->addMinute(), function () {
+            return Category::select('id', 'name')->get();
+        });
+
         return Inertia::render('Tasks', [
             'tasks' => $tasks,
-            'categories' => Category::select('id', 'name')->get(),
+            'categories' => $categories,
             'filters' => $filters ?: new \stdClass(),
         ]);
     }
