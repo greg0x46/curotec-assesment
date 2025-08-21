@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('task_id')->references('id')->on('tasks')->cascadeOnDelete();
             $table->timestamps();
 
+            $table->unique(['category_id', 'task_id']);
             $table->index('category_id');
             $table->index('task_id');
         });
