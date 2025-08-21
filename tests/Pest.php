@@ -10,6 +10,8 @@
 | need to change it using the "pest()" function to bind a different classes or traits.
 |
 */
+use App\Models\User;
+use function Pest\Laravel\actingAs;
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
@@ -41,7 +43,10 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function asUser(?User $user = null): User
 {
-    // ..
+    $user ??= User::factory()->create();
+    actingAs($user);
+
+    return $user;
 }
