@@ -39,7 +39,7 @@ class CategoryController extends Controller
         $category->update($request->validated());
 
         return redirect()
-            ->route('categories.index')
+            ->route('tasks.index')
             ->with('success', 'Category updated successfully.');
     }
 

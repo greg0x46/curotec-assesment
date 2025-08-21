@@ -6,10 +6,6 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TaskController;
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('', function () {
-        return Inertia::render('Dashboard');
-    });
-
     Route::resource('categories', CategoryController::class)
         ->only(['index', 'store', 'update', 'destroy']);
     Route::resource('tasks', TaskController::class)
