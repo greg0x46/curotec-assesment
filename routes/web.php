@@ -7,7 +7,7 @@ use App\Http\Controllers\TaskController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
-        redirect()->route('tasks.index');
+        return redirect()->route('tasks.index');
     });
 
     Route::resource('categories', CategoryController::class)
